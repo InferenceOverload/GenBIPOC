@@ -57,6 +57,33 @@ function getPrompts(level) {
   }
 }
 
+function ThinkingSteps({ steps }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!steps || steps.length === 0) return null;
+
+  return (
+    <div className="border border-blue-200 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
+      >
+        <span className={`transition-transform ${expanded ? 'rotate-90' : ''}`}>▶</span>
+        <span className="font-medium">Agent Reasoning</span>
+        <span className="text-blue-500">({steps.length} step{steps.length !== 1 ? 's' : ''})</span>
+      </button>
+      {expanded && (
+        <div className="px-3 py-2 space-y-2 bg-white border-t border-blue-100">
+          {steps.map((step, i) => (
+            <div key={i} className="text-xs text-gray-700 border-l-2 border-blue-200 pl-2 whitespace-pre-wrap">
+              {step}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AgentChatPanel() {
   const { data, selectedWing, selectedTeamLead, selectedHandler,
           getSelectedHandlerData, getSelectedTeamData, periodMonths } = useDashboard();
@@ -71,6 +98,7 @@ export default function AgentChatPanel() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [activeToolCalls, setActiveToolCalls] = useState([]);
+  const [activeThinking, setActiveThinking] = useState(null);
   const messagesEndRef = useRef(null);
   const userId = useRef(`ui-${Date.now()}`);
 
@@ -133,7 +161,8 @@ export default function AgentChatPanel() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      let assistantText = '';
+      const textParts = []; // Accumulate all text parts in order
+      let hasSeenToolCall = false;
       const toolCallMap = new Map();
 
       while (true) {
@@ -150,6 +179,7 @@ export default function AgentChatPanel() {
 
           for (const part of event.content.parts) {
             if (part.functionCall) {
+              hasSeenToolCall = true;
               const { id, name, args } = part.functionCall;
               toolCallMap.set(id, { id, name, args, status: 'calling' });
               setActiveToolCalls(Array.from(toolCallMap.values()));
@@ -166,18 +196,25 @@ export default function AgentChatPanel() {
             }
 
             if (part.text) {
-              assistantText = part.text;
+              // Classify: text before/between tool calls = thinking, text after last tool call = narrative
+              textParts.push({ text: part.text, isThinking: !hasSeenToolCall || toolCallMap.size > 0 });
+              // Show live thinking updates
+              setActiveThinking(part.text);
             }
           }
         }
       }
 
+      // The last text part is the final narrative; everything else is thinking
+      const thinkingSteps = textParts.slice(0, -1).map(p => p.text);
+      const finalText = textParts.length > 0 ? textParts[textParts.length - 1].text : '';
       const finalToolCalls = Array.from(toolCallMap.values());
       setMessages(prev => [
         ...prev,
-        { role: 'assistant', text: assistantText, toolCalls: finalToolCalls },
+        { role: 'assistant', text: finalText, toolCalls: finalToolCalls, thinkingSteps },
       ]);
       setActiveToolCalls([]);
+      setActiveThinking(null);
 
     } catch (err) {
       console.error('Agent SSE error:', err);
@@ -246,6 +283,10 @@ export default function AgentChatPanel() {
               </div>
             ) : (
               <div className="space-y-2">
+                {/* Thinking steps — investigation plan & reasoning breadcrumbs */}
+                {msg.thinkingSteps?.length > 0 && (
+                  <ThinkingSteps steps={msg.thinkingSteps} />
+                )}
                 {msg.toolCalls?.length > 0 && (
                   <div className="space-y-1">
                     {msg.toolCalls.map((tc) => (
@@ -269,6 +310,13 @@ export default function AgentChatPanel() {
           </div>
         ))}
 
+        {/* Live thinking text while streaming */}
+        {isLoading && activeThinking && (
+          <div className="border-l-2 border-blue-300 bg-blue-50/50 rounded-r-lg px-3 py-2 text-xs text-blue-800 whitespace-pre-wrap">
+            {activeThinking}
+          </div>
+        )}
+
         {isLoading && activeToolCalls.length > 0 && (
           <div className="space-y-1">
             {activeToolCalls.map((tc) => (
@@ -283,7 +331,7 @@ export default function AgentChatPanel() {
           </div>
         )}
 
-        {isLoading && activeToolCalls.length === 0 && (
+        {isLoading && activeToolCalls.length === 0 && !activeThinking && (
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <span className="animate-spin inline-block">&#8635;</span>
             Thinking...
