@@ -1,0 +1,6 @@
+google-adk>=1.0.0
+google-cloud-aiplatform
+fastapi
+uvicorn[standard]
+python-dotenv
+ag-ui-adk>=0.4.2
