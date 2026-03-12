@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+:root {
+  --hartford-primary: #1F4E79;
+  --hartford-accent: #2E75B6;
+  --hartford-light: #D6E4F0;
+  --hartford-dark: #0D2840;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom scrollbar for nav */
+nav::-webkit-scrollbar { width: 4px; }
+nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+
+/* CopilotKit chat styling overrides */
+.copilotKitChat {
+  height: 100% !important;
+}
