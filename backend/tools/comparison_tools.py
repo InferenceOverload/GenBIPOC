@@ -1,5 +1,5 @@
 """Tools for comparing handler performance across dimensions."""
-from backend.data.data_loader import find_handler, compute_org_average
+from data.data_loader import find_handler, compute_org_average
 
 
 def compare_to_org_benchmark(handler_id: str, metric: str, months: int = 3) -> dict:

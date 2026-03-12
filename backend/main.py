@@ -11,6 +11,7 @@ load_dotenv(env_path)
 # Set GCP environment variables
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", os.getenv("GOOGLE_CLOUD_PROJECT", ""))
 os.environ.setdefault("GOOGLE_CLOUD_LOCATION", os.getenv("GOOGLE_CLOUD_LOCATION", "global"))
+os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "TRUE"))
 
 from google.adk.cli.fast_api import get_fast_api_app
 import uvicorn

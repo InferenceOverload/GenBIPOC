@@ -7,11 +7,11 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent.parent / ".env")
 
 from google.adk.agents import Agent
-from backend.tools.handler_tools import get_handler_metrics, get_handler_profile
-from backend.tools.team_tools import get_team_metrics, get_team_average
-from backend.tools.wing_tools import get_wing_summary
-from backend.tools.comparison_tools import compare_to_org_benchmark, compare_periods
-from backend.tools.investigation_tools import get_correlated_metrics
+from tools.handler_tools import get_handler_metrics, get_handler_profile
+from tools.team_tools import get_team_metrics, get_team_average
+from tools.wing_tools import get_wing_summary
+from tools.comparison_tools import compare_to_org_benchmark, compare_periods
+from tools.investigation_tools import get_correlated_metrics
 
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.1-pro-preview")
 

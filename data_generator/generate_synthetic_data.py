@@ -135,7 +135,18 @@ BASELINES = {
 }
 
 
-def gen_metric(baseline_range, prev_value=None, drift_pct=15):
+HARD_CAPS = {
+    "csat_score": (1.0, 5.0),
+    "closure_rate_pct": (30, 99),
+    "reopen_rate_pct": (0, 25),
+    "error_rate_pct": (0, 20),
+    "supervisor_override_pct": (0, 30),
+    "reserve_accuracy_pct": (50, 100),
+    "litigation_rate_pct": (0, 30),
+}
+
+
+def gen_metric(baseline_range, prev_value=None, drift_pct=15, metric_key=None):
     """Generate a metric value with optional drift from previous."""
     low, high = baseline_range
     if prev_value is not None:
@@ -144,11 +155,15 @@ def gen_metric(baseline_range, prev_value=None, drift_pct=15):
         val = max(low * 0.7, min(high * 1.3, val))
     else:
         val = random.uniform(low, high)
+    # Apply hard caps for realistic bounds
+    if metric_key and metric_key in HARD_CAPS:
+        cap_low, cap_high = HARD_CAPS[metric_key]
+        val = max(cap_low, min(cap_high, val))
     return val
 
 
-def gen_int_metric(baseline_range, prev_value=None, drift_pct=15):
-    return int(round(gen_metric(baseline_range, prev_value, drift_pct)))
+def gen_int_metric(baseline_range, prev_value=None, drift_pct=15, metric_key=None):
+    return max(0, int(round(gen_metric(baseline_range, prev_value, drift_pct, metric_key))))
 
 
 def gen_monthly_metrics(lob, handler_id):
@@ -163,13 +178,13 @@ def gen_monthly_metrics(lob, handler_id):
             p = prev.get(key)
             if key in ("csat_score", "closure_rate_pct", "reopen_rate_pct", "error_rate_pct",
                         "supervisor_override_pct", "reserve_accuracy_pct", "litigation_rate_pct"):
-                m[key] = round(gen_metric(rng, p), 1)
+                m[key] = round(gen_metric(rng, p, metric_key=key), 1)
             elif key in ("avg_settlement_amt",):
-                m[key] = round(gen_metric(rng, p), -2)
+                m[key] = round(gen_metric(rng, p, metric_key=key), -2)
             elif key in ("avg_handle_time_min",):
-                m[key] = round(gen_metric(rng, p), 1)
+                m[key] = round(gen_metric(rng, p, metric_key=key), 1)
             else:
-                m[key] = gen_int_metric(rng, p)
+                m[key] = gen_int_metric(rng, p, metric_key=key)
             prev[key] = m[key]
 
         m["month"] = month
@@ -199,7 +214,7 @@ def apply_stories(handler_id, lob, months_data):
         nov["training_hours"] = 6
         nov["calls_handled"] = int(aug["calls_handled"] * 1.05)
         nov["claims_closed"] = int(aug["claims_closed"] * 1.02)
-        nov["csat_score"] = round(aug["csat_score"] + 0.3, 1)
+        nov["csat_score"] = round(min(5.0, aug["csat_score"] + 0.3), 1)
         nov["certifications_completed"] = 0
 
     # Story 2: Burnout Signal — Lisa Crane, Jul-Sep 2024 (index 6-8)

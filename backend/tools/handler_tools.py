@@ -1,5 +1,5 @@
 """Tools for querying individual handler data."""
-from backend.data.data_loader import find_handler
+from data.data_loader import find_handler
 
 
 def get_handler_metrics(handler_id: str, months: int = 3) -> dict:

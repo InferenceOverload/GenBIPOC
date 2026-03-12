@@ -8,3 +8,5 @@ dist/
 *.db
 sessions.db
 .DS_Store
+.adk/
+*.egg-info/

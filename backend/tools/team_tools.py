@@ -1,5 +1,5 @@
 """Tools for querying team-level data."""
-from backend.data.data_loader import find_team_handlers, find_team_lead
+from data.data_loader import find_team_handlers, find_team_lead
 
 
 def get_team_metrics(team_lead_id: str, months: int = 3) -> dict:

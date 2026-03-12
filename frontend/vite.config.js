@@ -7,9 +7,10 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      '/api/copilotkit': {
-        target: 'http://localhost:4000',
+      '/api/adk': {
+        target: 'http://localhost:8000',
         changeOrigin: true,
+        rewrite: (path) => path.replace('/api/adk', ''),
       },
       '/api/data': {
         target: 'http://localhost:8000',

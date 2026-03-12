@@ -1,5 +1,5 @@
 """Tools for querying wing-level data."""
-from backend.data.data_loader import load_data, find_wing
+from data.data_loader import load_data, find_wing
 
 
 def get_wing_summary(wing_id: str, months: int = 3) -> dict:

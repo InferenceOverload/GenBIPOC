@@ -1,5 +1,5 @@
 """Tools for investigating correlated metric changes."""
-from backend.data.data_loader import find_handler
+from data.data_loader import find_handler
 
 
 def get_correlated_metrics(handler_id: str, anchor_month: str, threshold_pct: float = 15.0) -> dict:
